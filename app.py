@@ -1,7 +1,7 @@
 import streamlit as st
 import pandas as pd
 
-# Cấu hình trang cơ bản (tên tab, icon, mở rộng màn hình)
+# Cấu hình trang cơ bản để app mở full màn hình và có icon tab
 st.set_page_config(page_title="Tối Ưu Nạp", page_icon="🎮", layout="wide")
 
 # CSS cho Tiêu đề: Ánh vàng gold kim loại, in hoa, ép 1 dòng không rớt chữ
@@ -22,72 +22,39 @@ st.markdown("""
     <h1 class="title-gold">HỆ THỐNG TỐI ƯU NẠP</h1>
     """, unsafe_allow_html=True)
 
-# -----------------------------------------
-# PHẦN ĐỌC DỮ LIỆU TỪ GOOGLE SHEETS
-# -----------------------------------------
-# !!! QUAN TRỌNG: M điền MÃ ID của file Google Sheets vào giữa 2 dấu ngoặc kép bên dưới nha
+# M điền MÃ_ID_CỦA_SHEET của m vào đây
 SHEET_ID = "1BoaL94VL1olNHyz_ZOQRcnkRCeUG4Q_vNmxmnNkDFpw"
 
 @st.cache_data(ttl=600) # Tự refresh dữ liệu mỗi 10 phút
 def load_data():
-    try:
-        # Link tải data từ các Sheet con
-        url = f"https://docs.google.com/spreadsheets/d/{SHEET_ID}/gviz/tq?tqx=out:csv&sheet=GemCard"
-        df_gemcard = pd.read_csv(url)
-        
-        url_gold = f"https://docs.google.com/spreadsheets/d/{SHEET_ID}/gviz/tq?tqx=out:csv&sheet=Gold"
-        df_gold = pd.read_csv(url_gold)
-        
-        url_combo = f"https://docs.google.com/spreadsheets/d/{SHEET_ID}/gviz/tq?tqx=out:csv&sheet=Combo"
-        df_combo = pd.read_csv(url_combo)
-        
-        # Xử lý data (làm sạch cột Value)
-        if 'Value' in df_gemcard.columns:
-            df_gemcard['Value'] = df_gemcard['Value'].astype(str).str.replace('.', '', regex=False).str.replace(' đ', '', regex=False).str.strip().astype(int)
-        
-        # Tách Gem và Card
-        df_gem = df_gemcard[df_gemcard['Pack'].str.startswith('Gem')].copy() if 'Pack' in df_gemcard.columns else pd.DataFrame()
-        df_card = df_gemcard[df_gemcard['Pack'].str.startswith('Card')].copy() if 'Pack' in df_gemcard.columns else pd.DataFrame()
-        
-        return df_gem, df_card, df_gold, df_combo
+    # URL đọc trực tiếp từ Sheets
+    url = f"https://docs.google.com/spreadsheets/d/{SHEET_ID}/gviz/tq?tqx=out:csv&sheet=GemCard"
+    df_gemcard = pd.read_csv(url)
     
-    except Exception as e:
-        st.error("⚠️ Chưa kết nối được Google Sheets. Nhớ thay đúng MÃ_ID_CỦA_SHEET nha m!")
-        return pd.DataFrame(), pd.DataFrame(), pd.DataFrame(), pd.DataFrame()
+    # URL cho các sheet còn lại (Gold, Combo)
+    url_gold = f"https://docs.google.com/spreadsheets/d/{SHEET_ID}/gviz/tq?tqx=out:csv&sheet=Gold"
+    df_gold = pd.read_csv(url_gold)
+    
+    url_combo = f"https://docs.google.com/spreadsheets/d/{SHEET_ID}/gviz/tq?tqx=out:csv&sheet=Combo"
+    df_combo = pd.read_csv(url_combo)
+    
+    # Xử lý dọn dẹp số liệu
+    df_gemcard['Value'] = df_gemcard['Value'].astype(str).str.replace('.', '', regex=False).str.replace(' đ', '', regex=False).str.strip().astype(int)
+    
+    df_gem = df_gemcard[df_gemcard['Pack'].str.startswith('Gem')].copy()
+    df_card = df_gemcard[df_gemcard['Pack'].str.startswith('Card')].copy()
+    
+    return df_gem, df_card, df_gold, df_combo
 
-# Khởi chạy hàm lấy data
+# ==========================================
+# KHỞI TẠO DỮ LIỆU (ĐÂY LÀ DÒNG CHỐNG SẬP APP)
+# ==========================================
 df_gem, df_card, df_gold, df_combo = load_data()
 
-# -----------------------------------------
-# GIAO DIỆN CÁC PART
-# -----------------------------------------
-st.write("---")
-
-# PART 1
-st.subheader("🔥 Part 1: CÁC GÓI CƠ BẢN")
-if st.button("TÍNH TOÁN CƠ BẢN", type="primary"):
-    # (Đoạn này m chèn logic tính toán hoặc show data Part 1)
-    st.success("Đã kích hoạt tính toán Part 1!")
-    st.dataframe(df_gem)
-
-st.write("---")
-
-# PART 2
-st.subheader("💎 Part 2: CÁC GÓI COMBO")
-if st.button("TÍNH TOÁN COMBO", type="primary"):
-    # (Đoạn này m chèn logic tính toán hoặc show data Part 2)
-    st.success("Đã kích hoạt tính toán Part 2!")
-    st.dataframe(df_combo)
-
-st.write("---")
-
-# PART 3 - Đã đồng bộ tên và màu nút
-st.subheader("🎁 Part 3: SEASONAL PACKAGE")
-if st.button("TÍNH TOÁN PACKAGE", type="primary"):
-    # (Đoạn này m chèn logic tính toán hoặc show data Part 3)
-    st.success("Đã kích hoạt tính toán Seasonal Package!")
-    
-st.write("---")
+# ==========================================
+# 2. TÍNH TỶ GIÁ GỐC DỰA TRÊN GÓI RẺ NHẤT
+# ==========================================
+gem_base_rate = (df_gem['Value'] / df_gem['Qnt']).min()  # VND / 1 Ngọc
 card_base_rate = (df_card['Value'] / df_card['Qnt']).min() # VND / 1 Thẻ
 gold_base_rate = (df_gold['Gem2trade'] / df_gold['Qnt']).min() * gem_base_rate # VND / 1 Vàng
 
@@ -219,7 +186,7 @@ with col2:
 
 # --- PART 3: ĐÁNH GIÁ MỨC HẤP DẪN CỦA SEASONAL PACKAGE ---
 st.divider() 
-st.header("3. ĐÁNH GIÁ MỨC HẤP DẪN CỦA SEASONAL PACKAGE")
+st.header("🎁 Part 3: SEASONAL PACKAGE")
 
 buy_method = st.radio("1. Package này mua bằng tiền hay trade bằng Ngọc?", ("Tiền", "Ngọc"))
 
@@ -239,7 +206,7 @@ with col2_s:
 with col3_s:
     pack_card = st.number_input("Số Thẻ có", min_value=0, step=1)
 
-if st.button("TÍNH TOÁN ROI SEASON PACKAGE"):
+if st.button("ROI OF SEASONAL PACKAGE", type="primary"):
     try:
         # BƯỚC A: QUY TOÀN BỘ GIÁ TRỊ GÓI RA VNĐ (Sử dụng tỷ giá gốc cực chuẩn ở phần 2)
         val_from_gem = pack_gem * gem_base_rate
