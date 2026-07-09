@@ -5,21 +5,41 @@ import pandas as pd
 st.set_page_config(page_title="Tối Ưu Nạp", page_icon="🎮", layout="wide")
 
 # CSS cho Tiêu đề: Ánh vàng gold kim loại, in hoa, ép 1 dòng không rớt chữ
+# CSS fix lỗi giao diện trên điện thoại
+# CSS fix giao diện trên điện thoại và chỉnh màu sắc
 st.markdown("""
     <style>
+    /* 1. Xử lý Tiêu đề chính: Màu vàng gold, ép 1 dòng, co giãn theo tỷ lệ màn hình */
     .title-gold {
         background: linear-gradient(to right, #BF953F, #FCF6BA, #B38728, #FBF5B7, #AA771C);
         -webkit-background-clip: text;
         -webkit-text-fill-color: transparent;
         text-transform: uppercase;
         white-space: nowrap;
-        font-size: clamp(18px, 4.5vw, 45px);
+        font-size: min(6.5vw, 45px);
         font-weight: 900;
         text-align: center;
         padding-bottom: 20px;
+        width: 100%;
+    }
+
+    /* 2. Đổi màu thẻ h2 (Part 1, 2, 3) thành gradient hồng đậm đổ qua tím */
+    h2 {
+        background: linear-gradient(to right, #D81B60, #8E24AA);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        font-weight: bold;
+    }
+
+    /* 3. Chống rớt chữ cho thẻ h2 trên màn hình điện thoại (max-width: 768px) */
+    @media (max-width: 768px) {
+        h2 {
+            font-size: min(5.5vw, 24px) !important; 
+            white-space: nowrap !important;
+        }
     }
     </style>
-    <h1 class="title-gold">HỆ THỐNG TỐI ƯU NẠP</h1>
+    <h1 class="title-gold">CASTLE OPTIMIZATION</h1>
     """, unsafe_allow_html=True)
 
 # M điền MÃ_ID_CỦA_SHEET của m vào đây
@@ -100,7 +120,7 @@ col1, col2 = st.columns(2)
 
 # --- PART 1: TỪ TIỀN SANG NGỌC/THẺ ---
 with col1:
-    st.header("💸 Part 1: Nạp Tiền Thật")
+    st.header("💸 PART 1: MONEY OPTIMIZATION")
     budget_input = st.number_input("1. Bạn có bao nhiêu tiền (VND)?", min_value=0, step=10000, value=500000)
     target_1 = st.radio("2. Bạn muốn mua gì?", ["Ngọc (Gems)", "Thẻ (Cards)"], horizontal=True)
 
@@ -124,7 +144,7 @@ with col1:
 
 # --- PART 2: TỪ NGỌC ĐỔI SANG TÀI NGUYÊN ---
 with col2:
-    st.header("💎 Part 2: Quy Đổi Ngọc")
+    st.header("💎 PART 2: GEM OPTIMIZATION")
     default_gems = st.session_state.get('current_gems', 1000)
     gem_input = st.number_input("1. Bạn có bao nhiêu Ngọc?", min_value=0, step=100, value=default_gems)
 
