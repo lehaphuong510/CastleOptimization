@@ -38,7 +38,7 @@ st.markdown("""
             font-size: 5vw !important; /* Bóp nhỏ tỷ lệ chữ cái để nguyên cụm CASTLE OPTIMIZATION lọt thỏm vào 1 dòng */
         }
         h2 {
-            font-size: 5.5vw !important; 
+            font-size: 7.5vw !important; 
             white-space: nowrap !important;
         }
     }
