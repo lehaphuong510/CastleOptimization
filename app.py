@@ -18,7 +18,7 @@ st.markdown("""
         text-transform: uppercase;
         white-space: nowrap;
         font-weight: 900;
-        text-align: center;
+        text-align: left;
         padding-bottom: 20px;
         width: 100%;
         font-size: 40px; /* Kích thước mặc định cho Laptop/PC */
@@ -35,7 +35,7 @@ st.markdown("""
     /* 3. ÉP SIZE CỰC MẠNH CHO ĐIỆN THOẠI */
     @media (max-width: 768px) {
         .title-gold {
-            font-size: 7vw !important; /* Bóp nhỏ tỷ lệ chữ cái để nguyên cụm CASTLE OPTIMIZATION lọt thỏm vào 1 dòng */
+            font-size: 8vw !important; /* Bóp nhỏ tỷ lệ chữ cái để nguyên cụm CASTLE OPTIMIZATION lọt thỏm vào 1 dòng */
         }
         h2 {
             font-size: 5.5vw !important; 
