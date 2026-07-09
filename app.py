@@ -16,7 +16,7 @@ st.markdown("""
         -webkit-text-fill-color: transparent;
         text-transform: uppercase;
         white-space: nowrap;
-        font-size: min(6.5vw, 45px);
+        font-size: min(6.5vw, 35px);
         font-weight: 900;
         text-align: center;
         padding-bottom: 20px;
