@@ -10,29 +10,29 @@ Original file is located at
 import streamlit as st
 import pandas as pd
 
-# Thiết lập giao diện Web
-st.set_page_config(page_title="Game Optimizer Pro", page_icon="🎮", layout="wide")
-st.title("🎮 Hệ Thống Tối Ưu Hóa Gói Nạp Game")
-st.markdown("---")
+# M điền MÃ_ID_CỦA_SHEET của m vào đây
+SHEET_ID = "1BoaL94VL1olNHyz_ZOQRcnkRCeUG4Q_vNmxmnNkDFpw"
 
-# 1. ĐỌC VÀ XỬ LÝ DỮ LIỆU TỰ ĐỘNG
-@st.cache_data
+@st.cache_data(ttl=600) # Tự refresh dữ liệu mỗi 10 phút
 def load_data():
-    xls = pd.ExcelFile('GameOptimization.xlsx')
-    df_gemcard = pd.read_excel(xls, 'GemCard')
-
-    # Xử lý cột Value: xóa dấu chấm, chữ ' đ' và ép kiểu số nguyên
+    # URL đọc trực tiếp từ Sheets
+    url = f"https://docs.google.com/spreadsheets/d/{SHEET_ID}/gviz/tq?tqx=out:csv&sheet=GemCard"
+    df_gemcard = pd.read_csv(url)
+    
+    # URL cho các sheet còn lại (Gold, Combo)
+    url_gold = f"https://docs.google.com/spreadsheets/d/{SHEET_ID}/gviz/tq?tqx=out:csv&sheet=Gold"
+    df_gold = pd.read_csv(url_gold)
+    
+    url_combo = f"https://docs.google.com/spreadsheets/d/{SHEET_ID}/gviz/tq?tqx=out:csv&sheet=Combo"
+    df_combo = pd.read_csv(url_combo)
+    
+    # Xử lý tương tự như trước
     df_gemcard['Value'] = df_gemcard['Value'].astype(str).str.replace('.', '', regex=False).str.replace(' đ', '', regex=False).str.strip().astype(int)
-
-    # Tách dataframe
+    
     df_gem = df_gemcard[df_gemcard['Pack'].str.startswith('Gem')].copy()
     df_card = df_gemcard[df_gemcard['Pack'].str.startswith('Card')].copy()
-    df_gold = pd.read_excel(xls, 'Gold')
-    df_combo = pd.read_excel(xls, 'Combo')
-
+    
     return df_gem, df_card, df_gold, df_combo
-
-df_gem, df_card, df_gold, df_combo = load_data()
 
 # 2. TÍNH TỶ GIÁ GỐC DỰA TRÊN GÓI RẺ NHẤT (BEST VALUE)
 gem_base_rate = (df_gem['Value'] / df_gem['Qnt']).min()  # VND / 1 Ngọc
@@ -169,3 +169,97 @@ with col2:
                     st.write(f"  🛒 Đổi **{v}x** `{k}`")
             else:
                 st.write("  ⚠️ *Không đủ Ngọc để đổi bất kỳ gói nào!*")
+
+
+st.divider() # Tạo đường kẻ ngang cho đẹp
+st.header("3. ĐÁNH GIÁ MỨC HẤP DẪN CỦA SEASON PACKAGE")
+
+# 1. Chọn phương thức mua
+buy_method = st.radio("1. Package này mua bằng tiền hay trade bằng Ngọc?", ("Tiền", "Ngọc"))
+
+# 2. Nhập chi phí
+if buy_method == "Tiền":
+    cost_vnd = st.number_input("Giá tiền mua (VNĐ)", min_value=0, step=1000)
+    cost_gem = 0
+else:
+    cost_gem = st.number_input("Số ngọc đem trade", min_value=0, step=100)
+    cost_vnd = 0
+
+# 3. Nhập vật phẩm nhận được
+st.markdown("**2. Trong Package có những gì? (Chỉ điền món có trong gói, không có cứ để số 0)**")
+col1, col2, col3 = st.columns(3)
+with col1:
+    pack_gem = st.number_input("Số Ngọc có", min_value=0, step=100)
+with col2:
+    pack_gold = st.number_input("Số Vàng có", min_value=0, step=1000)
+with col3:
+    pack_card = st.number_input("Số Thẻ có", min_value=0, step=1)
+
+if st.button("TÍNH TOÁN ROI SEASON PACKAGE"):
+    try:
+        # --- BƯỚC A: TÍNH TỶ GIÁ CHUẨN TỪ GOOGLE SHEETS ---
+        # (Lưu ý: Tên cột 'Qty', 'Value', 'Price' dưới đây m nhớ chỉnh lại cho khớp với chữ trong file Sheets của m nha)
+        
+        # 1 VNĐ = ? Ngọc
+        base_gem_per_vnd = (df_gem['Qty'] / df_gem['Value']).mean() 
+        # 1 Ngọc = ? Vàng
+        base_gold_per_gem = (df_gold['Qty'] / df_gold['Price']).mean() 
+        # 1 Ngọc = ? Thẻ (Giả sử m có df_card, nếu nằm chung df_combo thì sửa lại tên dataframe)
+        # Giả định df_card có cột Qty và Price
+        base_card_per_gem = (df_combo['Qty'] / df_combo['Price']).mean() 
+
+        # --- BƯỚC B: QUY ĐỔI GIÁ TRỊ GÓI SEASON RA NGỌC ---
+        val_from_gem = pack_gem
+        val_from_gold = pack_gold / base_gold_per_gem if base_gold_per_gem > 0 else 0
+        val_from_card = pack_card / base_card_per_gem if base_card_per_gem > 0 else 0
+        
+        total_pack_value_in_gem = val_from_gem + val_from_gold + val_from_card
+
+        # --- BƯỚC C: TÍNH CHI PHÍ GỐC BẰNG NGỌC ---
+        if buy_method == "Tiền":
+            cost_in_gem = cost_vnd * base_gem_per_vnd
+            cost_display = f"{cost_vnd:,.0f} VNĐ"
+        else:
+            cost_in_gem = cost_gem
+            cost_display = f"{cost_gem:,.0f} Ngọc"
+
+        # --- BƯỚC D: TÍNH ROI ---
+        if cost_in_gem > 0:
+            roi = ((total_pack_value_in_gem - cost_in_gem) / cost_in_gem) * 100
+        else:
+            roi = 0
+
+        # --- HIỂN THỊ KẾT QUẢ ---
+        st.markdown("### 📊 KẾT QUẢ ĐÁNH GIÁ:")
+        
+        if roi > 0:
+            st.success(f"**🔥 ROI của Package là: +{roi:,.1f}% (LỜI)**")
+        elif roi < 0:
+            st.error(f"**❄️ ROI của Package là: {roi:,.1f}% (LỖ)**")
+        else:
+            st.info(f"**⚖️ ROI của Package là: {roi:,.1f}% (HUỀ VỐN)**")
+
+        # Tính tỷ trọng ngân sách để chia hiển thị cho mượt
+        if total_pack_value_in_gem > 0:
+            ratio_gem = val_from_gem / total_pack_value_in_gem
+            ratio_gold = val_from_gold / total_pack_value_in_gem
+            ratio_card = val_from_card / total_pack_value_in_gem
+        else:
+            ratio_gem = ratio_gold = ratio_card = 0
+
+        # Phân bổ chi phí chuẩn theo đúng tỷ trọng vật phẩm trong gói
+        std_gem_bought = (cost_in_gem * ratio_gem)
+        std_gold_bought = (cost_in_gem * ratio_gold) * base_gold_per_gem
+        std_card_bought = (cost_in_gem * ratio_card) * base_card_per_gem
+
+        st.markdown(f"**Theo thông thường, với {cost_display} m chỉ mua được lượng quy đổi tương đương là:**")
+        
+        if pack_gem > 0:
+            st.write(f"- 💎 **{std_gem_bought:,.0f} Ngọc** *(Mức m đang được nhận: {pack_gem:,.0f})*")
+        if pack_gold > 0:
+            st.write(f"- 🪙 **{std_gold_bought:,.0f} Vàng** *(Mức m đang được nhận: {pack_gold:,.0f})*")
+        if pack_card > 0:
+            st.write(f"- 🃏 **{std_card_bought:,.0f} Thẻ** *(Mức m đang được nhận: {pack_card:,.0f})*")
+
+    except Exception as e:
+        st.error(f"Có lỗi hệ thống do tên cột chưa khớp, m kiểm tra lại nhé: {e}")
