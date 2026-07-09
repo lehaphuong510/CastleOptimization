@@ -26,7 +26,7 @@ st.markdown("""
 # PHẦN ĐỌC DỮ LIỆU TỪ GOOGLE SHEETS
 # -----------------------------------------
 # !!! QUAN TRỌNG: M điền MÃ ID của file Google Sheets vào giữa 2 dấu ngoặc kép bên dưới nha
-SHEET_ID = "MÃ_ID_CỦA_SHEET_CỦA_M_ĐIỀN_VÀO_ĐÂY"
+SHEET_ID = "1BoaL94VL1olNHyz_ZOQRcnkRCeUG4Q_vNmxmnNkDFpw"
 
 @st.cache_data(ttl=600) # Tự refresh dữ liệu mỗi 10 phút
 def load_data():
