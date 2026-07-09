@@ -7,20 +7,21 @@ st.set_page_config(page_title="Tối Ưu Nạp", page_icon="🎮", layout="wide"
 # CSS cho Tiêu đề: Ánh vàng gold kim loại, in hoa, ép 1 dòng không rớt chữ
 # CSS fix lỗi giao diện trên điện thoại
 # CSS fix giao diện trên điện thoại và chỉnh màu sắc
+# CSS fix giao diện trên điện thoại và chỉnh màu sắc
 st.markdown("""
     <style>
-    /* 1. Xử lý Tiêu đề chính: Màu vàng gold, ép 1 dòng, co giãn theo tỷ lệ màn hình */
+    /* 1. Thiết lập chung cho Tiêu đề chính */
     .title-gold {
         background: linear-gradient(to right, #BF953F, #FCF6BA, #B38728, #FBF5B7, #AA771C);
         -webkit-background-clip: text;
         -webkit-text-fill-color: transparent;
         text-transform: uppercase;
         white-space: nowrap;
-        font-size: min(6.5vw, 35px);
         font-weight: 900;
         text-align: center;
         padding-bottom: 20px;
         width: 100%;
+        font-size: 40px; /* Kích thước mặc định cho Laptop/PC */
     }
 
     /* 2. Đổi màu thẻ h2 (Part 1, 2, 3) thành gradient hồng đậm đổ qua tím */
@@ -31,10 +32,13 @@ st.markdown("""
         font-weight: bold;
     }
 
-    /* 3. Chống rớt chữ cho thẻ h2 trên màn hình điện thoại (max-width: 768px) */
+    /* 3. ÉP SIZE CỰC MẠNH CHO ĐIỆN THOẠI */
     @media (max-width: 768px) {
+        .title-gold {
+            font-size: 5vw !important; /* Bóp nhỏ tỷ lệ chữ cái để nguyên cụm CASTLE OPTIMIZATION lọt thỏm vào 1 dòng */
+        }
         h2 {
-            font-size: min(5.5vw, 24px) !important; 
+            font-size: 5.5vw !important; 
             white-space: nowrap !important;
         }
     }
